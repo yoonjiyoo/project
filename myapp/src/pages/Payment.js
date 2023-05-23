@@ -37,13 +37,14 @@ function Payment(props) {
 
     const handlePayment = async () => {
         try {
+            console.log(account);
             const txHash = await props.web3.eth.sendTransaction({
                 from: account,
                 to: selectedCar.owner,
                 value: props.web3.utils.toWei(props.web3.utils.BN(selectedCar.rentalFee), "ether")
             });
-            await props.contract.methods.addReservation(selectedCar.carNumber, formattedDate).send({ from: account });
-            
+            await props.contract.methods.makeReservation(selectedCar.carNumber, formattedDate).send({ from: account });
+
             navigate("/registration/success"); // 주소 재지정 필요
         } catch (e) {
             console.log(e);

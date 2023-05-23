@@ -6,6 +6,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 import Rent from "./pages/Rent";
 import Detail from "./pages/Detail";
 import Main from "./pages/Main";
+import Return from "./pages/Return";
 import React, { useState, useEffect } from "react";
 import Registration from "./pages/Registration"
 import { useNavigate } from "react-router-dom";
@@ -120,12 +121,13 @@ function App() {
         <Route path="/search" element={<Rent contract={contract} cars={cars} setCars={setCars}/>} />
         <Route path="/search/:id" element={<Detail cars={cars} web3={web3} contract={contract} />} />
         <Route path="/search/:id/payment" element={<Payment cars={cars} web3={web3} contract={contract} account={account}/>} />
+        <Route path="/return" element={<Return contract={contract} web3={web3}/>} />
         <Route path="*" element={<div>없는 페이지</div>} />
       </Routes>
 
           {/* <Kakao/> */}
 
-          <form className="inputForm" onSubmit={handleSubmit}>
+          {/* <form className="inputForm" onSubmit={handleSubmit}>
               <input
                 placeholder="Search Place..."
                 onChange={onChange}
@@ -133,7 +135,7 @@ function App() {
               />
               <button type="submit">검색</button>
             </form>
-            <MapContainer searchPlace={place} />
+            <MapContainer searchPlace={place} /> */}
       {/*<CarSharing web3={web3} account={account} contract={contract}/>
         <button onClick={notify}>Notify!</button>
         <ToastContainer

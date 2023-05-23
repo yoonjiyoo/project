@@ -16,15 +16,20 @@ contract CarSharing {
         // string manufacturer;  
     }
 
-    struct Reservation {
-        string[] carNumberArr;
+    // struct Reservation {
+    //     string[] carNumberArr;
+    // }
+    struct ResInfo {
+        string carNumber;
+        string date;
     }
     
     uint8 private carCnt = 0;
 
     mapping(uint8 => Car) public cars;
     // mapping(string => Reservation) private reservations; 
-    mapping(string => string[]) private reservations;
+    mapping(string => string[]) private carNumberRes;
+    mapping(address => ResInfo) public accountRes; 
 
     function addCar(string memory _carNumber, string memory _modelName, uint8 _dayOfWeek, string memory _location, uint32 _rentalFee, uint32 _drivingFee, uint64 _registrationDate) public {
         cars[carCnt] = Car({
@@ -51,6 +56,10 @@ contract CarSharing {
         return cars[_idx];
     }
 
+    // function getCarByCarNumber(string memory _carNumber) public view returns (Car memory) {
+    //     return cars[_idx];
+    // }
+
     function getAllCars() public view returns (Car[] memory) {
         Car[] memory ret = new Car[](carCnt);
         for (uint8 i = 0; i < carCnt; i++) {
@@ -59,13 +68,37 @@ contract CarSharing {
         return ret;
     }
 
-    function addReservation(string memory _carNumber, string memory _date) public {
-        reservations[_carNumber].push(_date);
+    function makeReservation(string memory _carNumber, string memory _date) public {
+        carNumberRes[_carNumber].push(_date);
+        accountRes[msg.sender] = ResInfo(_carNumber, _date);
+    }
+
+    function returnReservation(address _addr) public {
+        string memory carNumber = accountRes[_addr].carNumber;
+        string memory date = accountRes[_addr].date;
+        for (uint256 i = 0; i < carNumberRes[carNumber].length; i++) {
+            if (keccak256(bytes(carNumberRes[carNumber][i])) == keccak256(bytes(date))) {
+                carNumberRes[carNumber][i] = carNumberRes[carNumber][carNumberRes[carNumber].length-1];
+                delete carNumberRes[carNumber][carNumberRes[carNumber].length-1];
+                break;
+            }
+        }
+        accountRes[_addr] = ResInfo("", "");
+    }
+
+    // function getResInfo() public view returns(ResInfo memory) {
+    //     return accountRes[msg.sender];
+    // }
+
+    function getResInfo(address _addr) public view returns(ResInfo memory) {
+        return accountRes[_addr];
     }
 
     function getReservedDates(string memory _carNumber) public view returns (string[] memory) {
-        return reservations[_carNumber];
+        return carNumberRes[_carNumber];
     }
+
+
 
     // function isReservationAvailable(uint32 _date, string memory _carNumber) public view returns (bool){
     //     string[] memory carNumberArr = reservations[_date].carNumberArr;
