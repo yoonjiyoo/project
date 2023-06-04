@@ -11,7 +11,8 @@ import React, { useState, useEffect } from "react";
 import Registration from "./pages/Registration"
 import { useNavigate } from "react-router-dom";
 import Payment from "./pages/Payment";
-
+import ShowRegistration from "./pages/ShowRegistration"
+import Review from "./pages/Review"
 
 //import { useSelector } from "react-redux"
 
@@ -112,12 +113,17 @@ function App() {
       <Routes>
         <Route path="/" element={<Main/>} />
         <Route path="/registration" element={<Registration web3={web3} account={account} contract={contract} cars={cars} setCars={setCars} />} />
-        <Route path="/registration/success" element={
-            <div>
-                success! 
-                <button onClick={()=>navigate("/")}>확인</button>
+        <Route path="/registration/success" 
+        element={<ShowRegistration web3={web3} account={account} contract={contract} cars={cars} setCars={setCars} />} /> 
+        <Route path="/review/:carNumber" 
+        element={<Review web3={web3} account={account} contract={contract} cars={cars} setCars={setCars} />} /> 
+        {/* test*/}
+        {/* element={
+             <div>
+                 success! 
+                 <button onClick={()=>navigate("/")}>확인</button>
 
-            </div>} />
+             </div>} */}
         <Route path="/search" element={<Rent contract={contract} cars={cars} setCars={setCars}/>} />
         <Route path="/search/:id" element={<Detail cars={cars} web3={web3} contract={contract} />} />
         <Route path="/search/:id/payment" element={<Payment cars={cars} web3={web3} contract={contract} account={account}/>} />

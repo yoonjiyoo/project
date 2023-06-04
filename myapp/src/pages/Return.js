@@ -49,7 +49,7 @@ function Return(props) { // 차량 반납 - 반납용 페이지를 따로 만들
                 await props.contract.methods.returnReservation(account).send({ from: account });
                 // console.log("예약현황" + await props.contract.methods.getResInfo(account).call());
                 // console.log("예약리스트" + await props.contract.methods.getReservedDates(carNumber).call());
-                navigate("/registration/success"); // 주소 재지정 필요
+                navigate("/review/"+carNumber); // 주소 재지정 필요
             }
         } catch (e) {
             console.log(e);
