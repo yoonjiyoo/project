@@ -37,15 +37,30 @@ function Payment(props) {
 
     const handlePayment = async () => {
         try {
-            console.log(account);
-            const txHash = await props.web3.eth.sendTransaction({
-                from: account,
-                to: selectedCar.owner,
-                value: props.web3.utils.toWei(props.web3.utils.BN(selectedCar.rentalFee), "ether")
-            });
-            await props.contract.methods.makeReservation(selectedCar.carNumber, formattedDate).send({ from: account });
+            // 길이가 0이면 대여 가능 
+            // 반납이 완료되었으면 대여 가능 
+            const length = await props.contract.methods.getAccountBorrowLength(account).call();
 
-            navigate("/registration/success"); // 주소 재지정 필요
+            let flag;
+            if (length != 0) {
+                const bor = await props.contract.methods.getBorrow(account).call();
+                if (bor.returnDate == "" && bor.addr != "0x0000000000000000000000000000000000000000") flag = false;
+                else flag = true;
+            }
+            if (length == 0 || flag) {
+                const txHash = await props.web3.eth.sendTransaction({
+                    from: account,
+                    to: selectedCar.owner,
+                    value: props.web3.utils.toWei(props.web3.utils.BN(selectedCar.rentalFee), "ether")
+                }); 
+                // const txHash1 = txHash.transactionHash;
+                await props.contract.methods.startRental(selectedCar.idx, formattedDate).send({ from: account });
+    
+                navigate("/registration/success"); // 주소 재지정 필요
+                console.log("대여 가능");
+            } else {
+                console.log("대여가 불가능함. 반납을 먼저 진행할 것");
+            }
         } catch (e) {
             console.log(e);
         }
