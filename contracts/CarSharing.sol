@@ -7,31 +7,35 @@ contract CarSharing {
         uint8 idx;
         address owner;
         string carNumber;
+        string modelName;
+
         uint8 dayOfWeek;
+        string location;
         uint32 rentalFee;
         uint32 drivingFee;
-        string modelName;
-        string location;
-        uint64 registrationDate;
-        // string manufacturer;  
+        bool isRentable;
     }
-
-    // struct Reservation {
-    //     string[] carNumberArr;
-    // }
-    struct ResInfo {
-        string carNumber;
-        string date;
-    }
-    
     uint8 private carCnt = 0;
-
     mapping(uint8 => Car) public cars;
-    // mapping(string => Reservation) private reservations; 
-    mapping(string => string[]) private carNumberRes;
-    mapping(address => ResInfo) public accountRes; 
 
-    function addCar(string memory _carNumber, string memory _modelName, uint8 _dayOfWeek, string memory _location, uint32 _rentalFee, uint32 _drivingFee, uint64 _registrationDate) public {
+    struct RenInfo {
+        uint256 idx;
+        string modelName;
+        address addr;
+        string carNumber;
+        string rentalDate;
+        string returnDate;
+        uint32 totalFee;
+        // uint32 rentalFee;
+        // uint32 drivingFee;
+        // string txHash1;
+        // string txHash2;
+    }
+    mapping(address => RenInfo[]) public accountLend; 
+    mapping(address => RenInfo[]) public accountBorrow; 
+    mapping(string => string[]) private carNumberRen;
+
+    function addCar(string memory _carNumber, string memory _modelName, uint8 _dayOfWeek, string memory _location, uint32 _rentalFee, uint32 _drivingFee) public {
         cars[carCnt] = Car({
             idx: carCnt,
             owner: msg.sender,
@@ -41,24 +45,23 @@ contract CarSharing {
             location: _location,
             rentalFee: _rentalFee,
             drivingFee: _drivingFee,
-            registrationDate: _registrationDate
+            isRentable: true
         });
         carCnt += 1;
     }
-
-    function deleteCar(uint8 _idx) public {
-        cars[_idx] = cars[carCnt-1];
-        delete cars[carCnt-1];
-        carCnt -= 1;
+    
+    function modifyCar(uint8 _idx) public {
+    // function modifyCar(uint8 _idx, uint8 _dayOfWeek, string memory _location, uint32 _rentalFee, uint32 _drivingFee, bool _isRentable) public {
+        // cars[_idx].dayOfWeek = _dayOfWeek;
+        // cars[_idx].location = _location;
+        // cars[_idx].rentalFee = _rentalFee;
+        // cars[_idx].drivingFee = _drivingFee;
+        cars[_idx].isRentable = !cars[_idx].isRentable;
     }
 
     function getCar(uint8 _idx) public view returns (Car memory) {
         return cars[_idx];
     }
-
-    // function getCarByCarNumber(string memory _carNumber) public view returns (Car memory) {
-    //     return cars[_idx];
-    // }
 
     function getAllCars() public view returns (Car[] memory) {
         Car[] memory ret = new Car[](carCnt);
@@ -68,108 +71,75 @@ contract CarSharing {
         return ret;
     }
 
-    function makeReservation(string memory _carNumber, string memory _date) public {
-        carNumberRes[_carNumber].push(_date);
-        accountRes[msg.sender] = ResInfo(_carNumber, _date);
+    function startRental(uint8 _idx, string memory _rentalDate) public {
+        Car memory c = getCar(_idx);
+        // borrow
+        uint256 length = accountBorrow[msg.sender].length;
+        accountBorrow[msg.sender].push(RenInfo(length, c.modelName, c.owner, c.carNumber, _rentalDate, "", c.rentalFee));
+        
+        // lend
+        length = accountLend[c.owner].length;
+        accountLend[c.owner].push(RenInfo(length, c.modelName, msg.sender, c.carNumber, _rentalDate, "", c.rentalFee));
+
+        carNumberRen[c.carNumber].push(_rentalDate);
     }
 
-    function returnReservation(address _addr) public {
-        string memory carNumber = accountRes[_addr].carNumber;
-        string memory date = accountRes[_addr].date;
-        for (uint256 i = 0; i < carNumberRes[carNumber].length; i++) {
-            if (keccak256(bytes(carNumberRes[carNumber][i])) == keccak256(bytes(date))) {
-                carNumberRes[carNumber][i] = carNumberRes[carNumber][carNumberRes[carNumber].length-1];
-                delete carNumberRes[carNumber][carNumberRes[carNumber].length-1];
+    function endRental(address _sender, string memory _returnDate, uint32 _drivingFee) public {
+        uint256 length = accountBorrow[_sender].length;
+        RenInfo memory ren = accountBorrow[_sender][length-1];
+
+        uint256 lendIdx = getLendIdx(ren.addr, ren.carNumber, ren.rentalDate);
+        accountBorrow[_sender][length-1].returnDate = _returnDate;
+        accountBorrow[_sender][length-1].totalFee += _drivingFee;
+        accountLend[ren.addr][lendIdx].returnDate = _returnDate;
+        accountLend[ren.addr][lendIdx].totalFee += _drivingFee;
+    }
+
+    function getAllRenDates(string memory _carNumber) public view returns (string[] memory) {
+        return carNumberRen[_carNumber];
+    }
+
+    function getAccountBorrowLength(address _addr) public view returns(uint256) {
+        return accountBorrow[_addr].length;
+    }
+
+    function getBorrow(address _addr) public view returns(RenInfo memory) { 
+        uint256 length = accountBorrow[_addr].length;
+        return accountBorrow[_addr][length-1];
+    }
+
+    function getLendIdx(address _addr, string memory _carNumber, string memory _rentalDate) public view returns(uint256) {
+        for (uint256 i = 0; i < accountLend[_addr].length; i++) {
+            if (bytes(accountLend[_addr][i].returnDate).length != 0) continue; // 완료된 거래 
+            if (keccak256(bytes(accountLend[_addr][i].carNumber)) != keccak256(bytes(_carNumber))) continue;
+            if (keccak256(bytes(accountLend[_addr][i].rentalDate)) != keccak256(bytes(_rentalDate))) continue;
+            return i;
+        }
+        revert("No matching lend index found");
+    }
+
+    function getAllBorrow(address _addr) public view returns(RenInfo[] memory) { 
+        return accountBorrow[_addr];
+    }
+
+    function getAllLend(address _addr) public view returns(RenInfo[] memory) { 
+        return accountLend[_addr];
+    }
+
+    function cancelRental(address _sender) public {
+        RenInfo memory ren = getBorrow(_sender);
+        uint256 length = carNumberRen[ren.carNumber].length;
+        for (uint256 i = 0; i < length; i++) {
+            if (keccak256(bytes(carNumberRen[ren.carNumber][i])) == keccak256(bytes(ren.rentalDate))) {
+                carNumberRen[ren.carNumber][i] = carNumberRen[ren.carNumber][length-1];
+                delete carNumberRen[ren.carNumber][length-1];
                 break;
             }
         }
-        accountRes[_addr] = ResInfo("", "");
+
+        length = accountBorrow[_sender].length;
+        uint256 lendIdx = getLendIdx(ren.addr, ren.carNumber, ren.rentalDate);
+        delete accountBorrow[_sender][length-1];
+        delete accountLend[ren.addr][lendIdx];
     }
-
-    // function getResInfo() public view returns(ResInfo memory) {
-    //     return accountRes[msg.sender];
-    // }
-
-    function getResInfo(address _addr) public view returns(ResInfo memory) {
-        return accountRes[_addr];
-    }
-
-    function getReservedDates(string memory _carNumber) public view returns (string[] memory) {
-        return carNumberRes[_carNumber];
-    }
-
-
-
-    // function isReservationAvailable(uint32 _date, string memory _carNumber) public view returns (bool){
-    //     string[] memory carNumberArr = reservations[_date].carNumberArr;
-    //     for (uint i = 0; i < carNumberArr.length; i++) {
-    //         if (keccak256(bytes(carNumberArr[i])) == keccak256(bytes(_carNumber))) {
-    //             return false;
-    //         }
-    //     }
-    //     return true;
-    // }
-
-    // function getReservableCars(uint32 _date, uint8 _day) public view returns (Car[] memory) {
-    //     Car[] memory ret = new Car[](carCnt);
-    //     for (uint8 i = 0; i < carCnt; i++) {
-    //         if (isReservationAvailable(_date, cars[i].carNumber) == false) continue;
-    //         if (cars[i].dayOfWeek & (1 << (6-_day)) > 0) {
-    //             ret[i] = cars[i];
-    //         }
-    //     }
-    //     return ret;
-    // }
 }
-// pragma solidity ^0.8.0;
-
-// contract CarSharing {
-//     int private count = 0;
-    
-//     struct Car {
-//         uint256 carId;
-//         address owner;
-//         string model;
-//     }
-//     uint256 private carCnt = 0;
-
-//     mapping(uint256 => Car) public cars;
-
-//     // function addCar() public payable {
-//     //     cars[carCnt] = Car({
-//     //         carId: carCnt,
-//     //         owner: msg.sender
-//     //     });
-//     //     carCnt += 1;
-//     // }
-
-//     function incrementCounter(string memory _model) public {
-//         cars[carCnt] = Car({
-//             carId: carCnt,
-//             owner: msg.sender,
-//             model: _model
-//         });
-//         carCnt += 1;
-//     }
-
-//     function decrementCounter() public {
-//         delete cars[carCnt - 1];
-//         carCnt -= 1;
-//     }
-
-//     function getCount() public view returns (uint256) {
-//         return carCnt;
-//     }
-
-//     function getCar(uint256 _i) public view returns (Car memory) {
-//         return cars[_i];
-//     }
-
-//     function getAllCar() public view returns (Car[] memory) {
-//         Car[] memory ret = new Car[](carCnt);
-//         for (uint256 i = 0; i < carCnt; i++) {
-//             ret[i] = cars[i];
-//         }
-//         return ret;
-//     }
-// }
