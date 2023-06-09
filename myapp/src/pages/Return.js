@@ -27,18 +27,18 @@ function Return(props) { // 차량 반납 - 반납용 페이지를 따로 만들
             
             // 1. 반납할 차량이 있는지
             // 2. 반납 기한을 지켰는지 (당일 대여, 당일 반납)
-            const [carNumber, returnDueDate] = await props.contract.methods.getResInfo(account).call();
-            if (carNumber === "") {
+            const ren = await props.contract.methods.getBorrow(account).call();
+            if (ren.returnDate != "") {
                 console.log("반납할 차량이 없음"); // 확인을 위해 임시로 구성, 실제 반납할 차량이 없다면 버튼 비활성화, 또는 안내 메세지 화면에 노출 
             } else {
                 const cars = await props.contract.methods.getAllCars().call();
-                const selectedCar = cars.find(x => x.carNumber == carNumber);
+                const selectedCar = cars.find(x => x.carNumber == ren.carNumber);
                 const today = new Date().toISOString().split('T')[0];
 
                 const totalDrivingFee = selectedCar.drivingFee * mileage;
                 let lateFee = 0;
-                if (today > returnDueDate) { // 하루 연체될 때마다 대여료의 1% 부과 
-                    lateFee = selectedCar.rentalFee * 0.01 * (dateDiff(returnDueDate, today));
+                if (today > ren.rentalDate) { // 하루 연체될 때마다 대여료의 1% 부과 
+                    lateFee = selectedCar.rentalFee * 0.01 * (dateDiff(ren.rentalDate, today));
                 } 
 
                 const txHash = await props.web3.eth.sendTransaction({
@@ -46,7 +46,8 @@ function Return(props) { // 차량 반납 - 반납용 페이지를 따로 만들
                     to: selectedCar.owner,
                     value: props.web3.utils.toWei(props.web3.utils.BN(totalDrivingFee + lateFee), "ether")
                 });
-                await props.contract.methods.returnReservation(account).send({ from: account });
+                const txHash2 = txHash.transactionHash;
+                await props.contract.methods.endRental(account, today, totalDrivingFee + lateFee).send({ from: account });
                 // console.log("예약현황" + await props.contract.methods.getResInfo(account).call());
                 // console.log("예약리스트" + await props.contract.methods.getReservedDates(carNumber).call());
                 navigate("/review/"+carNumber); // 주소 재지정 필요
