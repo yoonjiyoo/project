@@ -46,25 +46,40 @@ function Detail(props) {
         }
     }
     getCount();
-    db.collection('product').where("차량번호","==", 차량.carNumber).get().then((결과)=>{
-      결과.forEach((doc)=>{
-          var 템플릿 = `<div>
-              
-              <div>차량번호 : ${doc.data().차량번호}</div>
-              <div>모델명 : ${doc.data().모델명}</div>
-              <div>가능한 요일 : ${doc.data().요일}</div>
-              <div>주차 장소 : ${doc.data().주차장소}</div>
-              <div>대여료 : ${doc.data().대여료}</div>
-              <div>주행료 : ${doc.data().주행료}</div>
-              <div>등록날짜 : ${doc.data().날짜 && doc.data().날짜.toDate()}</div>
-              <div><img src=${doc.data().이미지} alt='이미지'/></div>
-              <div>후기 : ${doc.data().후기}</div>
-            </div>`;
-            document.getElementById("container mt-3").insertAdjacentHTML("afterend",
-            템플릿);
-            })
-  })
+    
+  db.collection('reviewCar').where("차량번호","==", 차량.carNumber).get().then((결과)=>{
+    
+    결과.forEach((doc)=>{
+        var 템플릿 = `<div>
+            <div>${doc.data().후기}</div>
+          </div>`;
+          document.getElementById("container mt-3").insertAdjacentHTML("afterend",
+          템플릿);
+          })
+          var 템플릿0 = `
+            <h3>후기 </h3>
+          `;
+    document.getElementById("container mt-3").insertAdjacentHTML("afterend",템플릿0);
+})
+db.collection('product').where("차량번호","==", 차량.carNumber).get().then((결과)=>{
+  결과.forEach((doc)=>{
+      var 템플릿 = `<div>
+          
+          <div>차량번호 : ${doc.data().차량번호}</div>
+          <div>모델명 : ${doc.data().모델명}</div>
+          <div>가능한 요일 : ${doc.data().요일}</div>
+          <div>주차 장소 : ${doc.data().주차장소}</div>
+          <div>대여료 : ${doc.data().대여료}</div>
+          <div>주행료 : ${doc.data().주행료}</div>
+          <div>등록날짜 : ${doc.data().날짜 && doc.data().날짜.toDate()}</div>
+          <div><img src=${doc.data().이미지} alt='이미지'/></div>
+        </div>`;
+        document.getElementById("container mt-3").insertAdjacentHTML("afterend",
+        템플릿);
+        })
+})
   }, [props.contract]);
+  
 
   const [selectedDate, setSelectedDate] = useState(null);
 
