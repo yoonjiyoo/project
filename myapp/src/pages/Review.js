@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useParams } from 'react-router-dom';
 import DaumPost from "../components/DaumPost";
@@ -29,7 +29,7 @@ function Review(props) {
     const [rentalFee, setRentalFee] = useState();
     const [drivingFee, setDrivingFee] = useState();
     const navigate = useNavigate();
-
+    const inputRev = useRef();
     const [post, setPost] = useState(false);
 
     
@@ -52,11 +52,8 @@ function Review(props) {
         // })
         
           useEffect(() => {
-            (async () => {
-               // console.log(carNumber);
-            if (props.contract) {
-                    // let temp = await props.contract.methods.getReservedDates(차량.carNumber).call();
-                    // setExcludeDates(temp.map(dateString => parseISO(dateString)));
+            // (async () => {
+            // if (props.contract) {
                     db.collection('product').where("차량번호","==", carNumber).get().then((결과)=>{
                         결과.forEach((doc)=>{
                             var 템플릿 = `<div>
@@ -72,52 +69,41 @@ function Review(props) {
                               </div>`;
                               document.getElementById("container mt-3").insertAdjacentHTML("afterend",
                               템플릿);
+                                console.log("no");
                             
                         })
                     })
-                }
-            })();
+            //     }
+            // })();
         })
         async function Register() {
             
-                    //   const storage = firebase.storage();
-                    //   var file = document.querySelector('#image').files[0];
-                    //   var storageRef = storage.ref();
-                    //   var 저장할경로 = storageRef.child('image/' + file.name);
-                    //   var 업로드작업 = 저장할경로.put(file)
-              
-                    //   업로드작업.on( 'state_changed', 
-                    //       // 변화시 동작하는 함수 
-                    //       null, 
-                          //에러시 동작하는 함수
-                        //   (error) => {
-                        //   console.error('실패사유는', error);
-                        //   }, 
-                          // 성공시 동작하는 함수
-                        //   () => {
-                        //   업로드작업.snapshot.ref.getDownloadURL().then((url) => {
-                        //       console.log('업로드된 경로는', url);
-                        //       var 저장할거 = {
-                        //   차량번호 : carNumber,
-                        //   모델명 : modelName,
-                        //   요일 : dayOfWeek,
-                        //   주차장소 : location,
-                        //   대여료 : rentalFee,
-                        //   주행료 : drivingFee,
-                        //   날짜 : new Date(),
-                        //   이미지 : url
-                        //   }
-                          db.collection('product').where("차량번호","==", carNumber).get().then((result)=>{
-                            result.forEach((doc)=>{
-                                doc.ref.update({후기:review})
-                            })
-                              console.log(result);
-                              setTimeout(()=>window.location.href = "/registration/success",500)
-                          }).catch(()=>{
-                              console.log()
-                          })
-                    //   );
+                        //   db.collection('product').where("차량번호","==", carNumber).get().then((result)=>{
+                        //     result.forEach((doc)=>{
+                        //         doc.ref.update({후기:review})
+                        //     })
+                        //       console.log(result);
+                        //       setTimeout(()=>window.location.href = "/registration/success",500)
+                        //   }).catch(()=>{
+                        //       console.log()
+                        //   })
+                        
+                        // console.log("rev",inputRev.current.value);
+                        // setReview(inputRev.current.value);
+                        // console.log("review",review);
+                        const test = inputRev.current.value;
+                        var 저장할거 = {
+                            차량번호 : carNumber,
+                            후기 : test
+                            }
+                        db.collection('reviewCar').add(저장할거).then((result)=>{
+                            console.log(result);
+                            setTimeout(()=>window.location.href = "/registration/success",500)
+                        }).catch(()=>{
+                            console.log()
+                        })
                         }
+                    
         
     
 
@@ -125,8 +111,8 @@ function Review(props) {
     <div>
       <h1>리뷰해보세요</h1>
       <div id="container mt-3"></div> 
-      <input placeholder="리뷰" onChange={ (e)=>{ setReview(e.target.value)}}></input>
-      <button onClick={Register}>후기 등록하기</button>
+      <input placeholder="리뷰" ref={inputRev}></input>
+      <button onClick={()=>{Register();}}>후기 등록하기</button>
     </div>
     
       
