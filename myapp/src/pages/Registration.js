@@ -14,7 +14,7 @@ function Registration(props) {
     const [location, setLocation] = useState('');
     const [rentalFee, setRentalFee] = useState('');
     const [drivingFee, setDrivingFee] = useState('');
-    const [doubleSubmitFlag, setdoubleSubmitFlag] = useState(1111111);
+    const [doubleSubmitFlag, setdoubleSubmitFlag] = useState(127);
     
     const [post, setPost] = useState(false);
     
