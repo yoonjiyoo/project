@@ -1,20 +1,19 @@
-// import React from "react";
-import "./App.css";
-import CarSharing from "./components/CarSharing";
-import useWeb3 from "./hooks/useWeb3";
-import { Routes, Route, Link } from 'react-router-dom';
-import Rent from "./pages/Rent";
-import Detail from "./pages/Detail";
-import Main from "./pages/Main";
-import Return from "./pages/Return";
 import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+import CarSharing from "components/CarSharing";
+import useWeb3 from "./hooks/useWeb3";
+import Rent from "./pages/Search";
+import Detail from "./pages/Detail";
+import Mypage from "./pages/Profile";
+import Return from "./pages/Return";
 import Registration from "./pages/Registration"
 import { useNavigate } from "react-router-dom";
 import Payment from "./pages/Payment";
 import ShowRegistration from "./pages/ShowRegistration"
 import Review from "./pages/Review"
 
-//import { useSelector } from "react-redux"
+import Index from "./pages/Index";
 
 const { kakao } = window;
 
@@ -107,13 +106,13 @@ function App() {
 
 
 
-  if (!account) return <h1>메타마스크를 연결해주세요</h1>;
+  //if (!account) return <h1>메타마스크를 연결해주세요</h1>;
   return (
     <div>
       <Routes>
-        <Route path="/" element={<Main/>} />
+        <Route path="/" element={<Index/>} />
         <Route path="/registration" element={<Registration web3={web3} account={account} contract={contract} cars={cars} setCars={setCars} />} />
-        <Route path="/registration/success" 
+        <Route path="/registration/success/:carNumber" 
         element={<ShowRegistration web3={web3} account={account} contract={contract} cars={cars} setCars={setCars} />} /> 
         <Route path="/review/:carNumber" 
         element={<Review web3={web3} account={account} contract={contract} cars={cars} setCars={setCars} />} /> 
@@ -127,8 +126,10 @@ function App() {
         <Route path="/search" element={<Rent contract={contract} cars={cars} setCars={setCars}/>} />
         <Route path="/search/:id" element={<Detail cars={cars} web3={web3} contract={contract} />} />
         <Route path="/search/:id/payment" element={<Payment cars={cars} web3={web3} contract={contract} account={account}/>} />
-        <Route path="/return" element={<Return contract={contract} web3={web3}/>} />
+        <Route path="/return" element={<Return contract={contract} web3={web3} />} />
+        <Route path="/mypage" element={<Mypage contract={contract} cars={cars} setCars={setCars}/>} />
         <Route path="*" element={<div>없는 페이지</div>} />
+
       </Routes>
 
           {/* <Kakao/> */}

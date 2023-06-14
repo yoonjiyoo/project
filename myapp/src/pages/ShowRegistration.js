@@ -1,60 +1,147 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import DaumPost from "../components/DaumPost";
-import {db} from '../index.js'
-import "firebase/firestore"; 
-import 'firebase/storage';
-import firebase from "firebase/app";
+import React, { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Card, CardBody, CardImg, Container, Row, Col, Button } from "reactstrap";
+import DemoNavbar from "components/Navbars/DemoNavbar.js";
+import SimpleFooter from "components/Footers/SimpleFooter";
+import { db } from '../index.js';
+import useWeb3 from "../hooks/useWeb3";
 
-<div>
-<script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-storage.js"></script>
+function ShowRegistration() {
+  const { carNumber } = useParams();
+  const [carInfo, setCarInfo] = useState(null);
+  const [imgInfo, setImgInfo] = useState(null);
+  const [web3, account, contract] = useWeb3();
+
+  useEffect(() => {
+    const getCarInfo = async () => {
+      if (contract && carNumber) {
+        const cars = await contract.methods.getAllCars().call();
+        const car = cars.find((c) => c.carNumber === carNumber);
+        setCarInfo(car);
+      }
+    };
+
+    getCarInfo();
+  }, [carNumber, contract]);
+
+
+
+   useEffect(() => {
+    db.collection('product')
+      .where("차량번호", "==", carNumber)
+      .get()
+      .then((result) => {
+        if (!result.empty) {
+          const doc = result.docs[0];
+          setImgInfo(doc.data());
+        }
+      });
+   }, [carNumber]);
   
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> 
-  </div>
-function ShowRegistration(props) {
-    const [carNumber, setCarNumber] = useState();
-    const [modelName, setModelName] = useState();
-    const [dayOfWeek, setDayOfWeek] = useState();
-    const [location, setLocation] = useState();
-    const [rentalFee, setRentalFee] = useState();
-    const [drivingFee, setDrivingFee] = useState();
-    const navigate = useNavigate();
 
-    const [post, setPost] = useState(false);
+  const mainRef = useRef(null);
+  const navigate = useNavigate();
 
-    
-        db.collection('product').get().then((결과)=>{
-            결과.forEach((doc)=>{
-                var 템플릿 = `<div>
-                    
-                    <div>차량번호 : ${doc.data().차량번호}</div>
-                    <div>모델명 : ${doc.data().모델명}</div>
-                    <div>가능한 요일 : ${doc.data().요일}</div>
-                    <div>주차 장소 : ${doc.data().주차장소}</div>
-                    <div>대여료 : ${doc.data().대여료}</div>
-                    <div>주행료 : ${doc.data().주행료}</div>
-                    <div>등록날짜 : ${doc.data().날짜 && doc.data().날짜.toDate()}</div>
-                    <div><img src=${doc.data().이미지} alt='이미지'/></div>
-                  </div>`;
-                  document.getElementById("container mt-3").insertAdjacentHTML("afterend",
-                  템플릿);
-                  })
-        })
-    
-        
-    
+  const goToMainPage = () => {
+    navigate("/");
+  };
+
 
   return (
-    <div>
-      <h1>차량 등록 정보</h1>
-      <div id="container mt-3"></div> 
-    </div>
-    
-      
+    <>
+      <DemoNavbar />
+      <main ref={mainRef}>
+        <div className="position-relative">
+          <section className="section section-lg section-shaped pb-250">
+            <div className="shape shape-style-1 shape-default">
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <Container className="py-lg-md d-flex">
+              <div className="col px-0">
+                <Row>
+                  <Col lg="6">
+                    <h1 className="display-3 text-white">
+                      NeCar{" "}
+                      <span>Registration Success!</span>
+                    </h1>
+                    <div className="lead text-white">
+                      등록 성공했습니다! 등록된 정보를 확인해보세요.
+                    </div>
+                    <div className="btn-wrapper"></div>
+                  </Col>
+                </Row>
+              </div>
+            </Container>
+            <div className="separator separator-bottom separator-skew">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                preserveAspectRatio="none"
+                version="1.1"
+                viewBox="0 0 2560 100"
+                x="0"
+                y="0"
+              >
+                <polygon
+                  className="fill-white"
+                  points="2560 0 2560 100 0 100"
+                />
+              </svg>
+            </div>
+          </section>
+        </div>
+        <section className="section">
+          <Container>
+            <Card className="card-profile shadow mt--300">
+              <Row className="justify-content-center">
+                <Col className="order-lg-2" lg="8">
+                  <br />
+                  <br />
+                  <br />
+                  <br />
+                  <br />
+                  <CardImg top src={imgInfo?.이미지} alt="Car Image" />
+                  <CardBody>
+                    <h3>차량 정보</h3>
+                    <p>차량번호: {carInfo?.carNumber}</p>
+                    <p>모델명: {carInfo?.modelName}</p>
+                    <p>주차 위치: {carInfo?.location}</p>
+                    <p>대여가능 요일: {carInfo?.dayOfWeek}</p>
+                    <p>대여료: {carInfo?.rentalFee}</p>
+                    <p>주행료: {carInfo?.drivingFee}</p>
+                    <br />
+                    <br />
+                    <br />
+                    <div className="text-center">
+                    <Button
+                      className="btn-1 ml-1"
+                      color="success"
+                      outline
+                      type="button"
+                      onClick={goToMainPage}
+                    >
+                      홈으로 돌아가기
+                      </Button>
+                      </div>
+                    <br />
+                    <br />
+                    <br />
+                  </CardBody>
+                </Col>
+              </Row>
+            </Card>
+          </Container>
+        </section>
+      </main>
+      <SimpleFooter />
+    </>
   );
 }
 

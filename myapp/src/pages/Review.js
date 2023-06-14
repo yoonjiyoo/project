@@ -1,11 +1,18 @@
-import React, { useEffect, useState,useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { useParams } from 'react-router-dom';
+import { useParams} from 'react-router-dom';
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useRef } from 'react';
+import { Card, CardBody, CardImg, Container, Row, Col, Input, InputGroupAddon, InputGroupText, InputGroup, Button, Modal, ModalHeader, ModalBody, ModalFooter, } from "reactstrap";
+import DemoNavbar from "components/Navbars/DemoNavbar.js";
+import SimpleFooter from "components/Footers/SimpleFooter";
 import DaumPost from "../components/DaumPost";
 import {db} from '../index.js'
 import "firebase/firestore"; 
 import 'firebase/storage';
 import firebase from "firebase/app";
+import useWeb3 from "../hooks/useWeb3";
+
+
+
 
 <div>
 <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
@@ -23,14 +30,19 @@ function Review(props) {
     //const 차량 = props.cars?.find((x) =>  x.carNumber == carNumber);
     //const [carNumber, setCarNumber] = useState();
     const [review, setReview] = useState();
-    const [modelName, setModelName] = useState();
+    /*const [modelName, setModelName] = useState();
     const [dayOfWeek, setDayOfWeek] = useState();
     const [location, setLocation] = useState();
     const [rentalFee, setRentalFee] = useState();
-    const [drivingFee, setDrivingFee] = useState();
+    const [drivingFee, setDrivingFee] = useState();*/
     const navigate = useNavigate();
     const inputRev = useRef();
-    const [post, setPost] = useState(false);
+  const [post, setPost] = useState(false);
+    const [carInfo, setCarInfo] = useState(null);
+  const [imgInfo, setImgInfo] = useState(null);
+  const [web3, account, contract] = useWeb3();
+
+    
 
     
         // db.collection('product').get().then((결과)=>{
@@ -51,7 +63,7 @@ function Review(props) {
         //           })
         // })
         
-          useEffect(() => {
+          /*useEffect(() => {
             // (async () => {
             // if (props.contract) {
                     db.collection('product').where("차량번호","==", carNumber).get().then((결과)=>{
@@ -75,7 +87,39 @@ function Review(props) {
                     })
             //     }
             // })();
-        })
+        })*/
+  
+  
+  
+   useEffect(() => {
+    const getCarInfo = async () => {
+      if (contract && carNumber) {
+        const cars = await contract.methods.getAllCars().call();
+        const car = cars.find((c) => c.carNumber === carNumber);
+        setCarInfo(car);
+      }
+    };
+
+    getCarInfo();
+  }, [carNumber, contract]);
+
+
+
+   useEffect(() => {
+    db.collection('product')
+      .where("차량번호", "==", carNumber)
+      .get()
+      .then((result) => {
+        if (!result.empty) {
+          const doc = result.docs[0];
+          setImgInfo(doc.data());
+        }
+      });
+   }, [carNumber]);
+  
+  
+  
+  
         async function Register() {
             
                         //   db.collection('product').where("차량번호","==", carNumber).get().then((result)=>{
@@ -98,7 +142,7 @@ function Review(props) {
                             }
                         db.collection('reviewCar').add(저장할거).then((result)=>{
                             console.log(result);
-                            setTimeout(()=>window.location.href = "/registration/success",500)
+                            setTimeout(()=>window.location.href = "/",500)
                         }).catch(()=>{
                             console.log()
                         })
@@ -106,17 +150,108 @@ function Review(props) {
                     
         
     
+  const mainRef = useRef(null);
+  
 
   return (
-    <div>
-      <h1>리뷰해보세요</h1>
-      <div id="container mt-3"></div> 
+    <>
+    <DemoNavbar />
+      <main ref={mainRef}>
+        <div className="position-relative">
+          <section className="section section-lg section-shaped pb-250">
+            <div className="shape shape-style-1 shape-default">
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+                        </div>
+                        <Container className="py-lg-md d-flex">
+              <div className="col px-0">
+                <Row>
+                  <Col lg="6">
+                    <h1 className="display-3 text-white">
+                      NeCar{" "}
+                      <span>Review Page</span>
+                    </h1>
+                    <div className="lead text-white">
+                      이용해주셔서 감사합니다! <br></br>이용한 차량의 후기를 등록해보세요.
+                    </div>
+                    <div className="btn-wrapper"></div>
+                  </Col>
+                </Row>
+              </div>
+            </Container>
+            <div className="separator separator-bottom separator-skew">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                preserveAspectRatio="none"
+                version="1.1"
+                viewBox="0 0 2560 100"
+                x="0"
+                y="0"
+              >
+                <polygon
+                  className="fill-white"
+                  points="2560 0 2560 100 0 100"
+                />
+              </svg>
+            </div>
+          </section>
+        </div>
+        <section className="section">
+          <Container>
+            <Card className="card-profile shadow mt--300">
+              <Row className="justify-content-center">
+              <Col className="order-lg-2" lg="8">
+    <div><br></br><br></br><br></br><br></br>
+
+      <CardImg top src={imgInfo?.이미지} alt="Car Image" />
+                  <CardBody>
+                    <h3>차량 정보</h3>
+                    <p>차량번호: {carInfo?.carNumber}</p>
+                    <p>모델명: {carInfo?.modelName}</p>
+                    <p>주차 위치: {carInfo?.location}</p>
+                    <p>대여료: {carInfo?.rentalFee}</p>
+                    <p>주행료: {carInfo?.drivingFee}</p>
+                    <br />
+                    <br />
+                    <br />
+                    <div className="text-center">
+                      </div>
+                    <br />
+                    <br />
+                    <br />
+                  </CardBody>
+                      
+                      <InputGroup>
       <input placeholder="리뷰" ref={inputRev}></input>
-      <button onClick={()=>{Register();}}>후기 등록하기</button>
+      <button onClick={()=>{Register();}}>리뷰 등록하기</button></InputGroup>
     </div>
     
-      
+
+              </Col>
+            </Row>
+            <br></br><br></br><br></br><br></br><br></br><br></br><br></br><br></br><br></br>
+
+              
+            </Card>
+            
+            
+          </Container>
+
+        </section>
+      </main>
+      <br></br><br></br><br></br>
+      <SimpleFooter />
+      </>
   );
 }
+
+
 
 export default Review;
